@@ -11,7 +11,7 @@ def connect():
     Note: exits if a connection cannot be established.
     """
     try:
-        connection = ps.connect(database=config.database, user=config.user, password=config.password, host="stearns.wpi.edu")
+        connection = ps.connect(database=config.database, user=config.user, password=config.password)
     except Exception as e:
         print("Connection error: ", e)
         exit()
