@@ -1,31 +1,9 @@
-1. View Energy Consumption by Region
-This page shows the summary of total and average energy consumption for each center region in data.
-URL: http://127.0.0.1:PORT/api/energy_by_region
-Eg: http://127.0.0.1:8080/api/energy_by_region
-Output:
-Energy Consumption by Data Center Region
-Region                         Total Energy (kWh)   Average Energy (kWh) 
-Memphis Tennessee                     154,000,000        154,000,000
-US East (Northern Virginia)            45,532,815          9,106,563
-US Central (Iowa)                       4,346,063            869,213
-Not specified                           1,390,000            695,000
-US East (South Carolina)                1,123,598          1,123,598
-Europe (Finland)                          433,196            433,196
-China                                      15,360             15,360
+1. Database Design Decisions
+I chose one table because each row represents a unique LLM model, and there is no repeating data. The dataset contains 27 LLM models with  model name, parameter count, GPU type, training hours, data center region, and energy consumption metrics. Data Cleaning: I delete all "Not specified" and "Not disclosed" data since these were replaced with empty strings (NULL in the database) in order to maintain data type integrity.
 
-2. View Specific Region Data
-This page shows detailed energy consumption for a specific center region in data, including total energy and a list of models with their individual energy usage.
-URL: http://127.0.0.1:PORT/api/region/REGION_NAME
-Eg: http://127.0.0.1:8080/api/region/US%20East%20(Northern%20Virginia)
-Output:
-Region: US East (Northern Virginia)
-Total: 45,532,815 kWh
-Models:
-  GPT-3: 1,287,000 kWh
-  GPT-4: 16,099,378 kWh
-  Llama 3.1: 24,841,800 kWh
-  Claude 3 Opus: no data
-  Claude 3 Sonnet: no data
-  Claude 3 Haiku: no data
-  XLM: 82,637 kWh
-  Falcon 180B: 3,222,000 kWh
+2. User Stories and Query Mapping
+User Story 1 (Energy by Region): As a researcher studying AI environmental impact, I want to see total and average energy consumption by data center region so that I can identify which geographic areas have the highest energy usage for LLM training.
+Query: the query selects all records with non-empty energy consumption values, groups them by data center region, calculates the sum of total_energy_kwh for each region, and sorts the results from highest to lowest total energy.
+
+User Story 2: As an AI model developer, I want to know which LLM models have the largest parameter counts so that I can understand the relationship between model size and energy consumption.
+Query: The query selects all records with non-null parameter count values, sorts them by model_parameters_billion in descending order (from largest to smallest), and returns the top 5 records with their model names and parameter counts.
