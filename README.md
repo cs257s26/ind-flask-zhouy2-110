@@ -39,4 +39,4 @@ Instal:
  bash
 pip install flask
 
-copy command: \copy llm_energy(id, model_name, model_parameters_billion, training_tokens_billion, gpu_type, num_gpus, training_hours, data_center_region, pue, hardware_power_draw_watts_per_gpu, carbon_intensity_gco2_per_kwh, total_energy_kwh, total_carbon_footprint_kgco2e) FROM 'Data/llmenergy.csv' DELIMITER ',' CSV HEADER;
+copy command: \copy llm_energy(model_name, model_parameters_billion, training_tokens_billion, gpu_type, num_gpus, training_hours, data_center_region, pue, hardware_power_draw_watts_per_gpu, carbon_intensity_gco2_per_kwh, total_energy_kwh, total_carbon_footprint_kgco2e) FROM 'Data/llmenergy.csv' DELIMITER ',' CSV HEADER;
