@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FILENAME = os.path.join(BASE_DIR, 'Data', 'llmenergy.csv')
 
 data = []
-FILENAME = "/Users/zhouyuetong/ind-flask-zhouy2-110/ProductionCode/llmenergy.csv"
+
 
 def load_data():
    """Loads in data from a CSV file and stores it in `data`"""
