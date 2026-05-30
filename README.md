@@ -100,3 +100,4 @@ Models:
   Falcon 180B: 3,222,000 kWh
 Example Output (for region with no data):
 No data found for region: Invalid Region Name
+
