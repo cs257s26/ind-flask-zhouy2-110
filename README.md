@@ -1,42 +1,102 @@
-1. Database Design Decisions
-I chose one table because each row represents a unique LLM model, and there is no repeating data. The dataset contains 27 LLM models with  model name, parameter count, GPU type, training hours, data center region, and energy consumption metrics. Data Cleaning: I delete all "Not specified" and "Not disclosed" data since these were replaced with empty strings (NULL in the database) in order to maintain data type integrity.
+# Individual Flask Assignment - LLM Energy Consumption API
 
-2. User Stories and Query Mapping
-User Story 1 (Energy by Region): As a researcher studying AI environmental impact, I want to see total and average energy consumption by data center region so that I can identify which geographic areas have the highest energy usage for LLM training.
-Query: the query selects all records with non-empty energy consumption values, groups them by data center region, calculates the sum of total_energy_kwh for each region, and sorts the results from highest to lowest total energy.
+## Overview
 
-User Story 2: As an AI model developer, I want to know which LLM models have the largest parameter counts so that I can understand the relationship between model size and energy consumption.
-Query: The query selects all records with non-null parameter count values, sorts them by model_parameters_billion in descending order (from largest to smallest), and returns the top 5 records with their model names and parameter counts.
+This Flask application provides two API endpoints for analyzing energy consumption data from LLM model training. The endpoints allow users to view aggregated energy statistics by region and detailed per-model energy breakdowns for specific data center regions.
 
-3. Route 1: Get energy summary by region
-    URL: /api/energy_by_region
-    curl http://127.0.0.1:5000/api/energy_by_region
-    Example Request (browser):
-    http://127.0.0.1:5000/api/energy_by_region
-    Region               Total Energy (kWh)
-    US East (N. Virginia)   1,234,567
-    EU West (Ireland)         987,654
-    Asia Pacific (Tokyo)      456,789
+## How to Run the Routes
 
-Route 2: Get detailed data for a specific region
-    URL: /api/region/<region_name>
-    curl "http://127.0.0.1:5000/api/region/US%20East%20(Northern%20Virginia)"
-    Parameter: region_name (use %20 for spaces)
-    http://127.0.0.1:5000/api/region/US%20East%20(Northern%20Virginia)
-    Region: US East (Northern Virginia)
-    Total: 1,234,567 kWh
-    Models:
-        GPT-4: 500,000 kWh
-        Llama 2: 300,000 kWh
-        BLOOM: 234,567 kWh
+### Prerequisites
 
-How to Run the Application
+- Python 3.8 or higher
+- Flask library installed (`pip install flask`)
 
-- Python 3.8+
-- Flask library
+### Starting the Application
 
-Instal:
- bash
-pip install flask
+1. Navigate to the project directory:
+   ```bash
+   cd ind-flask-zhouy2-110
+2. Run the Flask application:
+   python3 app.py
+3. The server will start at http://127.0.0.1:5001 
 
- \copy llm_energy (model_name, model_parameters_billion, training_tokens_billion, gpu_type, num_gpus, training_hours, data_center_region, PUE, hardware_power_draw_watts_per_gpu, carbon_intensity_gco2_per_kwh, total_energy_kwh, total_carbon_footprint_kgco2e) FROM 'llmenergy.csv' WITH (DELIMITER ',', NULL 'NULL', FORMAT csv, HEADER TRUE);
+Route 1: Get Energy Summary by Region
+Purpose: Returns total and average energy consumption grouped by data center region, sorted from highest to lowest total energy.
+
+URL Pattern: /api/energy_by_region
+
+HTTP Method: GET
+
+Parameters: None
+
+Example Request (copy and paste into browser): 
+http://127.0.0.1:5000/api/energy_by_region
+
+Example using curl:
+curl http://127.0.0.1:5000/api/energy_by_region
+
+Energy Consumption by Data Center Region
+Region                         Total Energy (kWh)   Average Energy (kWh) 
+Memphis Tennessee                     154,000,000        154,000,000
+US East (Northern Virginia)            45,532,815          9,106,563
+US Central (Iowa)                       4,346,063            869,213
+Not specified                           1,390,000            695,000
+US East (South Carolina)                1,123,598          1,123,598
+Europe (Finland)                          433,196            433,196
+China                                      15,360             15,360
+
+
+
+Route 2: Get Detailed Data for a Specific Region
+Purpose: Returns a detailed breakdown of energy consumption by individual model for a specific data center region.
+
+URL Pattern: /api/region/<region_name>
+
+HTTP Method: GET
+
+Parameters:
+
+region_name (required) - The name of the data center region. Replace spaces with %20 in the URL.
+
+Valid region names (use exactly as shown):
+
+US East (Northern Virginia)
+
+US Central (Iowa)
+
+US East (South Carolina)
+
+Europe (Finland)
+
+China
+
+France
+
+Memphis Tennessee
+
+Example Requests (copy and paste into browser):
+
+1. US East (Northern Virginia):
+http://127.0.0.1:5000/api/region/US%20East%20(Northern%20Virginia)
+2. US Central (Iowa):
+http://127.0.0.1:5000/api/region/US%20Central%20(Iowa)
+3. Europe (Finland):
+http://127.0.0.1:5000/api/region/Europe%20(Finland)
+4. China:
+http://127.0.0.1:5000/api/region/China
+Example using curl:
+curl "http://127.0.0.1:5000/api/region/US%20East%20(Northern%20Virginia)"
+Example Output (for US East Northern Virginia):
+Region: US East (Northern Virginia)
+Total: 45,532,815 kWh
+Models:
+  GPT-3: 1,287,000 kWh
+  GPT-4: 16,099,378 kWh
+  Llama 3.1: 24,841,800 kWh
+  Claude 3 Opus: no data
+  Claude 3 Sonnet: no data
+  Claude 3 Haiku: no data
+  XLM: 82,637 kWh
+  Falcon 180B: 3,222,000 kWh
+Example Output (for region with no data):
+No data found for region: Invalid Region Name
