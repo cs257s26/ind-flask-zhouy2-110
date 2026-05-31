@@ -1,5 +1,5 @@
 from flask import Flask
-from ProductionCode.API import load_data, may_user_story
+from ProductionCode.API import load_data, region_energy_consumption
 import sys
 from io import StringIO
 
@@ -82,7 +82,7 @@ def energy_by_region():
     old_stdout = sys.stdout
     sys.stdout = StringIO()
     try:
-        may_user_story()
+        region_energy_consumption()
         output = sys.stdout.getvalue()
     finally:
         sys.stdout = old_stdout

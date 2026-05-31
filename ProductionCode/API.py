@@ -17,7 +17,7 @@ def load_data():
                data.append(row)
 
 
-def may_user_story():
+def region_energy_consumption():
     """
     Analyzes energy consumption by region.
     
