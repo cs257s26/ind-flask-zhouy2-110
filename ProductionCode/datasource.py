@@ -1,111 +1,105 @@
-import csv
-import os
+import psycopg2 as ps
+from psycopg2 import sql as psql
+import psqlConfig as config
 
-# Get the CSV file path
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CSV_PATH = os.path.join(BASE_DIR, 'Data', 'llmenergy.csv')
 
-def load_csv_data():
-    """Load data from CSV file"""
-    data = []
-    with open(CSV_PATH, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            data.append(row)
-    return data
+def connect():
+    """Connect to the PostgreSQL database."""
+    try:
+        connection = ps.connect(
+            database=config.database,
+            user=config.user,
+            password=config.password
+        )
+        return connection
+    except Exception as e:
+        print("Connection error: ", e)
+        exit()
 
-def get_energy_by_region():
+
+def get_energy_by_region(connection):
     """Total energy consumption grouped by data center region.
-    
+
+    Args:
+        connection: psycopg2 database connection
+
     Returns:
         list - a list of (region, total_energy_kwh) tuples, or None if the query fails.
     """
     try:
-        data = load_csv_data()
-        header = data[0]
-        
-        # Find column indices
-        region_idx = header.index("data_center_region")
-        energy_idx = header.index("total_energy_kwh")
-        
-        region_energy = {}
-        
-        for row in data[1:]:  # Skip header
-            region = row[region_idx] if region_idx < len(row) else ""
-            energy_str = row[energy_idx] if energy_idx < len(row) else ""
-            
-            # Skip invalid data
-            if not region or not energy_str:
-                continue
-            if energy_str in ["Not disclosed", "Not specified", ""]:
-                continue
-                
-            try:
-                energy = float(energy_str)
-                if region not in region_energy:
-                    region_energy[region] = 0
-                region_energy[region] += energy
-            except ValueError:
-                continue
-        
-        # Sort by total energy descending
-        results = sorted(region_energy.items(), key=lambda x: x[1], reverse=True)
-        return results
+        cursor = connection.cursor()
+        query = """
+            SELECT
+                data_center_region,
+                SUM(total_energy_kwh::numeric) AS total_energy_kwh
+            FROM llm_energy
+            WHERE data_center_region IS NOT NULL
+              AND data_center_region <> ''
+              AND total_energy_kwh IS NOT NULL
+              AND total_energy_kwh <> ''
+              AND total_energy_kwh NOT IN ('Not disclosed', 'Not specified')
+            GROUP BY data_center_region
+            ORDER BY total_energy_kwh DESC;
+        """
+        cursor.execute(query)
+        return cursor.fetchall()
     except Exception as e:
         print("Query error: ", e)
         return None
+    finally:
+        cursor.close()
 
-def get_top_models_by_parameters():
+
+def get_top_models_by_parameters(connection):
     """Retrieves the top 5 models with the largest parameter counts.
-    
+
+    Args:
+        connection: psycopg2 database connection
+
     Returns:
         list - a list of (model_name, model_parameters_billion) tuples, or None if the query fails.
     """
     try:
-        data = load_csv_data()
-        header = data[0]
-        
-        # Find column indices
-        model_idx = header.index("Model name")
-        param_idx = header.index("model_parameters_billion")
-        
-        models = []
-        
-        for row in data[1:]:  # Skip header
-            model_name = row[model_idx] if model_idx < len(row) else ""
-            param_str = row[param_idx] if param_idx < len(row) else ""
-            
-            # Skip invalid data
-            if not model_name or not param_str:
-                continue
-            if param_str in ["Not disclosed", "Not specified", ""]:
-                continue
-                
-            try:
-                params = float(param_str)
-                models.append((model_name, params))
-            except ValueError:
-                continue
-        
-        # Sort by parameters descending and get top 5
-        models.sort(key=lambda x: x[1], reverse=True)
-        return models[:5]
+        cursor = connection.cursor()
+        query = """
+            SELECT
+                model_name,
+                model_parameters_billion::numeric AS model_parameters_billion
+            FROM llm_energy
+            WHERE model_name IS NOT NULL
+              AND model_name <> ''
+              AND model_parameters_billion IS NOT NULL
+              AND model_parameters_billion <> ''
+              AND model_parameters_billion NOT IN ('Not disclosed', 'Not specified')
+            ORDER BY model_parameters_billion DESC
+            LIMIT 5;
+        """
+        cursor.execute(query)
+        return cursor.fetchall()
     except Exception as e:
         print("Something went wrong when executing the query: ", e)
         return None
+    finally:
+        cursor.close()
+
 
 def main():
-    results1 = get_energy_by_region()
+    connection = connect()
+
+    results1 = get_energy_by_region(connection)
     if results1 is not None:
         print("Energy consumption by region: ")
         for region, total in results1:
             print(f"{region}: {total:,.0f} kWh")
-    
-    results2 = get_top_models_by_parameters()
+
+    results2 = get_top_models_by_parameters(connection)
     if results2 is not None:
         print("\nTop 5 models by parameter count: ")
         for model, params in results2:
             print(f"{model}: {params}B")
+
+    connection.close()
+
 
 if __name__ == "__main__":
     main()
